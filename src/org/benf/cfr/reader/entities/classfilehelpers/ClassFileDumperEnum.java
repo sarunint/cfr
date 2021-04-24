@@ -34,7 +34,7 @@ public class ClassFileDumperEnum extends AbstractClassFileDumper {
     private static void dumpHeader(ClassFile c, InnerClassDumpType innerClassDumpType, Dumper d) {
         d.print(getAccessFlagsString(c.getAccessFlags(), dumpableAccessFlagsEnum));
 
-        d.print("enum ").dump(c.getThisClassConstpoolEntry().getTypeInstance()).print(" ");
+        d.print("enum ").dump(c.getThisClassConstpoolEntry().getTypeInstance(), true).print(" ");
 
         ClassSignature signature = c.getClassSignature();
         List<JavaTypeInstance> interfaces = signature.getInterfaces();
@@ -52,6 +52,7 @@ public class ClassFileDumperEnum extends AbstractClassFileDumper {
         StaticVariable staticVariable = entry.getFirst();
         AbstractConstructorInvokation constructorInvokation = entry.getSecond();
         d.fieldName(staticVariable.getFieldName(), staticVariable.getField(), classType, false, true);
+        d.dumpFieldDoc(staticVariable.getField(), classType);
 
         if (constructorInvokation instanceof ConstructorInvokationSimple) {
             List<Expression> args = constructorInvokation.getArgs();

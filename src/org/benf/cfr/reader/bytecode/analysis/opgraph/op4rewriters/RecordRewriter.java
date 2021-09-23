@@ -77,7 +77,8 @@ public class RecordRewriter {
         if (!Functional.filter(instances, new Predicate<ClassFileField>() {
             @Override
             public boolean test(ClassFileField in) {
-                return !recordFieldFlags.equals(in.getField().getAccessFlags());
+                // Fabric: Allow public fields to also be used as record components.
+                return !in.getField().testAccessFlag(AccessFlag.ACC_FINAL);
             }
         }).isEmpty()) {
             // we have some fields that don't look right.

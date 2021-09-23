@@ -255,6 +255,7 @@ public class RecordRewriter {
 
         if (!classArgEq(cmpValues.get(0), thisType)) return false;
 
+        /* Fabric: Disable checking the bsm args matching the field names. Proguard does not remap these.
         StringBuilder semi = new StringBuilder();
         int idx = 2;
         for (ClassFileField field : instances) {
@@ -265,6 +266,7 @@ public class RecordRewriter {
             semi.append(name);
         }
         if (!stringArgEq(cmpValues.get(1), semi.toString())) return false;
+         */
         return true;
     }
 

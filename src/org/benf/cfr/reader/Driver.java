@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class Driver {
+public class Driver {
 
     /*
      * When analysing individual classes, we behave a bit differently to jars - this *Could* probably
@@ -49,7 +49,7 @@ class Driver {
      *   mandates file names match declared names, but absolutely could happen when analysing randomly named class
      *   files in a junk directory.
      */
-    static void doClass(DCCommonState dcCommonState, String path, boolean skipInnerClass, DumperFactory dumperFactory) {
+    public static void doClass(DCCommonState dcCommonState, String path, boolean skipInnerClass, DumperFactory dumperFactory) {
         Options options = dcCommonState.getOptions();
         ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
         dcCommonState = new DCCommonState(dcCommonState, mapping);
@@ -111,7 +111,7 @@ class Driver {
         }
     }
 
-    static void doJar(DCCommonState dcCommonState, String path, AnalysisType analysisType, DumperFactory dumperFactory) {
+    public static void doJar(DCCommonState dcCommonState, String path, AnalysisType analysisType, DumperFactory dumperFactory) {
         Options options = dcCommonState.getOptions();
         IllegalIdentifierDump illegalIdentifierDump = IllegalIdentifierDump.Factory.get(options);
         ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);

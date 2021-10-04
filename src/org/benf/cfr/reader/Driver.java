@@ -51,8 +51,10 @@ public class Driver {
      */
     public static void doClass(DCCommonState dcCommonState, String path, boolean skipInnerClass, DumperFactory dumperFactory) {
         Options options = dcCommonState.getOptions();
-        ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
-        dcCommonState = new DCCommonState(dcCommonState, mapping);
+        if (dcCommonState.getObfuscationMapping() == null) {
+            ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
+            dcCommonState = new DCCommonState(dcCommonState, mapping);
+        }
 
         IllegalIdentifierDump illegalIdentifierDump = IllegalIdentifierDump.Factory.get(options);
         Dumper d = new ToStringDumper(); // sentinel dumper.
@@ -114,8 +116,10 @@ public class Driver {
     public static void doJar(DCCommonState dcCommonState, String path, AnalysisType analysisType, DumperFactory dumperFactory) {
         Options options = dcCommonState.getOptions();
         IllegalIdentifierDump illegalIdentifierDump = IllegalIdentifierDump.Factory.get(options);
-        ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
-        dcCommonState = new DCCommonState(dcCommonState, mapping);
+        if (dcCommonState.getObfuscationMapping() == null) {
+            ObfuscationMapping mapping = MappingFactory.get(options, dcCommonState);
+            dcCommonState = new DCCommonState(dcCommonState, mapping);
+        }
 
         SummaryDumper summaryDumper = null;
         try {

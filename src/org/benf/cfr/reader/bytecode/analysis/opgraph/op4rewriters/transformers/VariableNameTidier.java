@@ -271,6 +271,7 @@ public class VariableNameTidier implements StructuredStatementTransformer {
             JavaTypeInstance type = localVariable.getLocalClassType();
             String name = type.suggestVarName(); // But upper case first char.
             if (name == null) name = type.getRawName().replace('.', '_'); // mad fallback.
+            if (!name.startsWith("class_")) { // Fabric: Don't capitalise intermediary class names, I think there is a larger issue at play here, but this works for now.
             char[] chars = name.toCharArray();
             for (int idx = 0, len = chars.length; idx < len; ++idx) {
                 char c = chars[idx];
@@ -279,6 +280,7 @@ public class VariableNameTidier implements StructuredStatementTransformer {
                 name = new String(chars, idx, chars.length - idx);
                 break;
             }
+            } // End Fabric
 
 
             String lcMojo = mkLcMojo(name);

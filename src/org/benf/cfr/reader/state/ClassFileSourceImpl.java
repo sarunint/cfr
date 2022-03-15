@@ -6,7 +6,6 @@ import org.benf.cfr.reader.bytecode.analysis.parse.utils.Pair;
 import org.benf.cfr.reader.util.AnalysisType;
 import org.benf.cfr.reader.util.ConfusedCFRException;
 import org.benf.cfr.reader.util.MiscConstants;
-import org.benf.cfr.reader.util.StringUtils;
 import org.benf.cfr.reader.util.collections.Functional;
 import org.benf.cfr.reader.util.collections.ListFactory;
 import org.benf.cfr.reader.util.collections.MapFactory;
@@ -181,22 +180,21 @@ public class ClassFileSourceImpl implements ClassFileSource2 {
                 if (res != null) return res;
             }
 
+            int idx = inputPath.lastIndexOf("/");
+            String name = idx < 0 ? inputPath : inputPath.substring(idx + 1);
+
             // Going down this branch will trigger a class load, which will cause
             // static initialisers to be run.
             // This is expensive, but normally tolerable, except that there is a javafx
             // static initialiser which crashes the VM if called unexpectedly!
-            Class cls;
-            try {
-                cls = Class.forName(classPath);
-            } catch (IllegalStateException e) {
+            URL resource = Class.forName(classPath).getResource(name);
+
+            if (resource == null) {
                 return null;
             }
-            int idx = inputPath.lastIndexOf("/");
-            String name = idx < 0 ? inputPath : inputPath.substring(idx + 1);
-
-            return getUrlContent(cls.getResource(name));
-        } catch (Exception e) {
-            // This exception handler doesn't add anything.
+            return getUrlContent(resource);
+        } catch (Throwable t) {
+            // Class.forName can throw a linkage error in some circumstances, so it's necessary to trap throwable.
             return null;
         }
     }
@@ -266,6 +264,11 @@ public class ClassFileSourceImpl implements ClassFileSource2 {
             classRenamer.notifyClassFiles(jarContent.getClassFiles());
         }
 
+        String jarClassPath = jarContent.getManifestEntries().get(MiscConstants.MANIFEST_CLASS_PATH);
+        if (jarClassPath != null) {
+            addToRelativeClassPath(file, jarClassPath);
+        }
+
         List < String > output = ListFactory.newList();
         for (String classPath : jarContent.getClassFiles()) {
             if (classPath.toLowerCase().endsWith(".class")) {
@@ -323,36 +326,58 @@ public class ClassFileSourceImpl implements ClassFileSource2 {
 
             String[] classPaths = classPath.split("" + File.pathSeparatorChar);
             for (String path : classPaths) {
-                if (dump) {
-                    System.out.println(" " + path);
-                }
-                File f = new File(path);
-                if (f.exists()) {
-                    if (f.isDirectory()) {
-                        if (dump) {
-                            System.out.println(" (Directory)");
-                        }
-                        // Load all the jars in that directory.
-                        File[] files = f.listFiles();
-                        if (files != null) {
-                            for (File file : files) {
-                                processClassPathFile(file, file.getAbsolutePath(), classToPathMap, AnalysisType.JAR, dump);
-                            }
-                        }
-                    } else {
-                        processClassPathFile(f, path, classToPathMap, AnalysisType.JAR, dump);
-                    }
-                } else {
-                    if (dump) {
-                        System.out.println(" (Can't access)");
-                    }
-                }
+                processToClassPath(dump, path);
             }
             if (dump) {
                 System.out.println(" */");
             }
         }
         return classToPathMap;
+    }
+
+    private void processToClassPath(boolean dump, String path) {
+        if (dump) {
+            System.out.println(" " + path);
+        }
+        File f = new File(path);
+        if (f.exists()) {
+            if (f.isDirectory()) {
+                if (dump) {
+                    System.out.println(" (Directory)");
+                }
+                // Load all the jars in that directory.
+                File[] files = f.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        processClassPathFile(file, file.getAbsolutePath(), classToPathMap, AnalysisType.JAR, dump);
+                    }
+                }
+            } else {
+                processClassPathFile(f, path, classToPathMap, AnalysisType.JAR, dump);
+            }
+        } else {
+            if (dump) {
+                System.out.println(" (Can't access)");
+            }
+        }
+    }
+
+    private void addToRelativeClassPath(File file, String jarClassPath) {
+        String[] classPaths = jarClassPath.split(" ");
+        boolean dump = options.getOption(OptionsImpl.DUMP_CLASS_PATH);
+        String relative = null;
+        try {
+            File parent = file.getAbsoluteFile().getParentFile();
+            if (parent == null) {
+                return;
+            }
+            relative = parent.getCanonicalPath();
+        } catch (IOException e) {
+            return;
+        }
+        for (String path : classPaths) {
+            processToClassPath(dump, relative + File.separatorChar + path);
+        }
     }
 
     private void processClassPathFile(File file, String absolutePath, Map<String, JarSourceEntry> classToPathMap, AnalysisType analysisType, boolean dump) {
